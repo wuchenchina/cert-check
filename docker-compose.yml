@@ -1,0 +1,45 @@
+services:
+  certcheck-frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: certcheck-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - certcheck-backend
+    networks:
+      - certcheck-network
+    labels:
+      - "com.docker.compose.project=certcheck"
+
+  certcheck-backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: certcheck-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - ./data/logs:/app/logs
+      - ./data/cache:/app/cache
+    networks:
+      - certcheck-network
+    labels:
+      - "com.docker.compose.project=certcheck"
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+
+networks:
+  certcheck-network:
+    name: certcheck-network
+    driver: bridge
